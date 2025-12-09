@@ -104,6 +104,11 @@
             display: flex;
             flex-direction: column;
             overflow: auto;
+    touch-action: none; /* Предотвращает стандартные жесты браузера */
+    -webkit-user-select: none; /* Для Safari */
+    -moz-user-select: none; /* Для Firefox */
+    -ms-user-select: none; /* Для IE/Edge */
+    user-select: none;
         }
         #drawingCanvas {
             display: block;
@@ -111,6 +116,7 @@
             cursor: crosshair;
             width: 100%;
             height: 100% !important;
+            touch-action: none;
         }
         #previewCanvas {
             position: absolute;
@@ -915,7 +921,13 @@ socket.on('disconnect', () => {
         const boardIdDisplay = document.getElementById('boardIdDisplay');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
         const newBoardBtn = document.getElementById('newBoardBtn');
-        
+
+        //Тачскрин
+        let initialPinchDistance = 0;
+        let isPinching = false;
+        let initialWidthOnPinch = 0;
+        let initialHeightOnPinch = 0;
+        let initialShapeCenterOnPinch = null;    
         // Элементы режимов
         const drawModeBtn = document.getElementById('drawModeBtn');
         const shapeModeBtn = document.getElementById('shapeModeBtn');
@@ -1184,27 +1196,36 @@ if (currentMode !== mode) {
             setMode('text');
         };
         
-        // Функция для получения правильных координат мыши на canvas
-        function getCanvasCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            let clientX, clientY;
-            
-            if (e.type.includes('touch')) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-            
-            return { x, y };
-        }
+        // Функция для получения правильных координат мыши и касания на canvas
+// Обновленная функция для получения координат
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX, clientY;
+    
+    if (e.clientX !== undefined) {
+        // Событие мыши или объект с clientX/clientY
+        clientX = e.clientX;
+        clientY = e.clientY;
+    } else if (e.touches && e.touches.length > 0) {
+        // Событие касания
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        // Событие окончания касания
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+    } else {
+        return { x: 0, y: 0 };
+    }
+    
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    return { x, y };
+}
         
         // Проверка попадания на изображение
         function hitImage(x, y) {
@@ -1633,7 +1654,11 @@ if (currentMode !== mode) {
             drawings.forEach(drawData => {
                 drawOnCanvas(drawData);
             });
-            
+if (drawingBuffer && drawingBuffer.localBuffer) {
+    drawingBuffer.localBuffer.forEach(drawData => {
+        drawOnCanvas(drawData);
+    });
+}            
             // Перерисовываем все фигуры
             shapes.forEach(shapeData => {
                 const isSelected = (selectedShape && selectedShape.id === shapeData.id);
@@ -2422,6 +2447,353 @@ canvas.addEventListener('mouseup', (e) => {
                 });
             }
         }, { passive: false });
+
+        // Обработчики событий тачскрина для canvas
+    
+// Обновленный обработчик touchstart
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 1) {
+        // Существующий код для одиночного касания
+        const coords = getCanvasCoordinates(e.touches[0]);
+        
+        // Для режима "Фигуры" - проверяем попадание на существующую фигуру
+        if (currentMode === 'shape') {
+            const shape = hitShape(coords.x, coords.y);
+            if (shape) {
+                selectedShape = shape;
+                isDraggingShape = true;
+                shapeDragOffsetX = coords.x;
+                shapeDragOffsetY = coords.y;
+                redrawAll(); // Перерисовываем с выделением
+                return;
+            } else if (currentShape) {
+                // Если фигура не выбрана, но есть активная фигура для рисования
+                isDrawingShape = true;
+                shapeStartX = coords.x;
+                shapeStartY = coords.y;
+                return;
+            } else {
+                selectedShape = null;
+                redrawAll();
+            }
+        }
+        
+        // Для режима "Картинка"
+        if (currentMode === 'image') {
+            const img = hitImage(coords.x, coords.y);
+            if (img) {
+                selectedImage = img;
+                isDraggingImage = true;
+                imageDragOffsetX = coords.x - img.x;
+                imageDragOffsetY = coords.y - img.y;
+                redrawAll();
+                return;
+            } else {
+                selectedImage = null;
+                redrawAll();
+            }
+        }
+        
+        if (isDraggingElement) return;
+        
+        isDrawing = true;
+        lastX = coords.x;
+        lastY = coords.y;
+    } else if (e.touches.length === 2) {
+        // Начало жеста масштабирования двумя пальцами
+        isPinching = true;
+        isDrawing = false;
+        isDrawingShape = false;
+        isDraggingShape = false;
+        isDraggingImage = false;
+        
+        // Вычисляем начальное расстояние между пальцами
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialPinchDistance = getDistance(touch1, touch2);
+        
+        // Сохраняем начальные размеры для масштабирования
+        if (currentMode === 'image' && selectedImage) {
+            initialWidthOnPinch = selectedImage.width;
+            initialHeightOnPinch = selectedImage.height;
+        } else if (currentMode === 'shape' && selectedShape) {
+            initialWidthOnPinch = Math.abs(selectedShape.x2 - selectedShape.x1);
+            initialHeightOnPinch = Math.abs(selectedShape.y2 - selectedShape.y1);
+            initialShapeCenterOnPinch = {
+                x: (selectedShape.x1 + selectedShape.x2) / 2,
+                y: (selectedShape.y1 + selectedShape.y2) / 2
+            };
+        }
+    }
+});
+
+// Обновленный обработчик touchmove
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 1 && !isPinching) {
+        // Существующий код для одиночного касания
+        const coords = getCanvasCoordinates(e.touches[0]);
+        
+        // Для режима "Фигуры" - перетаскивание выбранной фигуры
+        if (currentMode === 'shape' && isDraggingShape && selectedShape) {
+            const deltaX = coords.x - shapeDragOffsetX;
+            const deltaY = coords.y - shapeDragOffsetY;
+            
+            // Обновляем координаты фигуры
+            selectedShape.x1 += deltaX;
+            selectedShape.y1 += deltaY;
+            selectedShape.x2 += deltaX;
+            selectedShape.y2 += deltaY;
+            
+            shapeDragOffsetX = coords.x;
+            shapeDragOffsetY = coords.y;
+            
+            redrawAll();
+            
+            // Отправляем обновление на сервер
+            socket.emit('update_shape', {
+                id: selectedShape.id,
+                x1: selectedShape.x1,
+                y1: selectedShape.y1,
+                x2: selectedShape.x2,
+                y2: selectedShape.y2,
+                shape: selectedShape.shape,
+                color: selectedShape.color,
+                brushSize: selectedShape.brushSize
+            });
+            return;
+        }
+        
+        // Для режима "Фигуры" - предпросмотр новой фигуры
+        if (currentMode === 'shape' && isDrawingShape && currentShape) {
+            previewShape(shapeStartX, shapeStartY, coords.x, coords.y);
+            return;
+        }
+        
+        // Для режима "Картинка"
+        if (currentMode === 'image' && isDraggingImage && selectedImage) {
+            const newX = coords.x - imageDragOffsetX;
+            const newY = coords.y - imageDragOffsetY;
+            
+            // Ограничиваем движение в пределах canvas
+            selectedImage.x = Math.max(0, Math.min(newX, canvas.width - selectedImage.width));
+            selectedImage.y = Math.max(0, Math.min(newY, canvas.height - selectedImage.height));
+            
+            redrawAll();
+            
+            // Отправляем обновление позиции на сервер
+            socket.emit('update_image', {
+                id: selectedImage.id,
+                x: selectedImage.x,
+                y: selectedImage.y,
+                width: selectedImage.width,
+                height: selectedImage.height
+            });
+            return;
+        }
+        
+        if (isDraggingElement || !isDrawing) return;
+        
+        const x = coords.x;
+        const y = coords.y;
+        const type = 'draw'; // Для тачскрина всегда рисуем, ластик отдельным режимом
+        
+        // Используем буфер ТОЛЬКО для режима рисования
+        if (currentMode === 'draw' && drawingBuffer) {
+            const drawingData = {
+                x, y, lastX, lastY,
+                color: type === 'eraser' ? '#ffffff' : currentColor,
+                brushSize: currentBrushSize,
+                type
+            };
+            
+            // Добавляем в буфер
+            drawingBuffer.addDrawing(drawingData);
+        } else if (currentMode === 'draw') {
+            // Старый способ для режима рисования
+            drawOnCanvas({
+                x, y, lastX, lastY, 
+                color: type === 'eraser' ? '#ffffff' : currentColor,
+                brushSize: currentBrushSize,
+                type
+            });
+            
+            // Сохраняем в локальную историю
+            drawings.push({
+                x, y, lastX, lastY,
+                color: currentColor,
+                brushSize: currentBrushSize,
+                type
+            });
+            
+            socket.emit('drawing', {
+                x, y, lastX, lastY,
+                color: currentColor,
+                brushSize: currentBrushSize,
+                type
+            });
+        }
+        
+        lastX = x;
+        lastY = y;
+    } else if (e.touches.length === 2 && isPinching) {
+        // Жест масштабирования двумя пальцами
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = getDistance(touch1, touch2);
+        
+        // Вычисляем коэффициент масштабирования
+        const scaleFactor = currentDistance / initialPinchDistance;
+        
+        // Применяем масштабирование к выбранному элементу
+        if (currentMode === 'image' && selectedImage) {
+            const newWidth = initialWidthOnPinch * scaleFactor;
+            const newHeight = initialHeightOnPinch * scaleFactor;
+            
+            // Минимальный и максимальный размер
+            if (newWidth < 20 || newHeight < 20 || newWidth > 2000 || newHeight > 2000) return;
+            
+            // Вычисляем центр масштабирования (середина между пальцами)
+            const centerX = (touch1.clientX + touch2.clientX) / 2;
+            const centerY = (touch1.clientY + touch2.clientY) / 2;
+            const canvasCoords = getCanvasCoordinates({ clientX: centerX, clientY: centerY });
+            
+            // Обновляем размер
+            selectedImage.width = newWidth;
+            selectedImage.height = newHeight;
+            
+            // Корректируем позицию для сохранения центра масштабирования
+            const offsetX = canvasCoords.x - selectedImage.x;
+            const offsetY = canvasCoords.y - selectedImage.y;
+            selectedImage.x = canvasCoords.x - offsetX * scaleFactor;
+            selectedImage.y = canvasCoords.y - offsetY * scaleFactor;
+            
+            redrawAll();
+            
+            // Отправляем обновление на сервер
+            socket.emit('update_image', {
+                id: selectedImage.id,
+                x: selectedImage.x,
+                y: selectedImage.y,
+                width: selectedImage.width,
+                height: selectedImage.height
+            });
+        } else if (currentMode === 'shape' && selectedShape && initialShapeCenterOnPinch) {
+            // Масштабируем фигуру
+            const newWidth = initialWidthOnPinch * scaleFactor;
+            const newHeight = initialHeightOnPinch * scaleFactor;
+            
+            // Вычисляем новые координаты относительно центра
+            const centerX = initialShapeCenterOnPinch.x;
+            const centerY = initialShapeCenterOnPinch.y;
+            
+            selectedShape.x1 = centerX - newWidth / 2;
+            selectedShape.y1 = centerY - newHeight / 2;
+            selectedShape.x2 = centerX + newWidth / 2;
+            selectedShape.y2 = centerY + newHeight / 2;
+            
+            redrawAll();
+            
+            // Отправляем обновление на сервер
+            socket.emit('update_shape', {
+                id: selectedShape.id,
+                x1: selectedShape.x1,
+                y1: selectedShape.y1,
+                x2: selectedShape.x2,
+                y2: selectedShape.y2,
+                shape: selectedShape.shape,
+                color: selectedShape.color,
+                brushSize: selectedShape.brushSize
+            });
+        }
+    }
+});
+
+// Обновленный обработчик touchend
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    
+    // Завершаем жест масштабирования, если было два пальца
+    if (isPinching) {
+        isPinching = false;
+        initialPinchDistance = 0;
+        initialWidthOnPinch = 0;
+        initialHeightOnPinch = 0;
+        initialShapeCenterOnPinch = null;
+        
+        // Если после завершения масштабирования остался один палец, не начинаем рисование
+        if (e.touches.length === 0) {
+            return;
+        }
+    }
+    
+    // Для режима "Фигуры"
+    if (currentMode === 'shape') {
+        if (isDraggingShape) {
+            isDraggingShape = false;
+            return;
+        }
+        
+        if (isDrawingShape) {
+            isDrawingShape = false;
+            previewCanvas.style.display = 'none';
+            previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Используем последние координаты из touchmove или берем из последнего события
+            if (e.changedTouches.length > 0) {
+                const coords = getCanvasCoordinates(e.changedTouches[0]);
+                const shapeId = 'shape_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const shapeData = {
+                    id: shapeId,
+                    shape: currentShape,
+                    x1: shapeStartX,
+                    y1: shapeStartY,
+                    x2: coords.x,
+                    y2: coords.y,
+                    color: currentColor,
+                    brushSize: currentBrushSize
+                };
+                
+                shapes.push(shapeData);
+                redrawAll();
+                
+                socket.emit('shape_drawn', shapeData);
+            }
+            return;
+        }
+    }
+    
+    // Для режима "Картинка"
+    if (currentMode === 'image' && isDraggingImage) {
+        isDraggingImage = false;
+        return;
+    }
+    
+    isDrawing = false;
+});
+
+canvas.addEventListener('touchcancel', () => {
+    isDrawing = false;
+    isPinching = false;
+    if (isDrawingShape) {
+        isDrawingShape = false;
+        previewCanvas.style.display = 'none';
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    }
+    if (isDraggingShape) {
+        isDraggingShape = false;
+    }
+    if (isDraggingImage) {
+        isDraggingImage = false;
+    }
+});        
+
+
+
+        //end touchscreen
         
         // Отключаем контекстное меню на правый клик
         canvas.addEventListener('contextmenu', (e) => {
