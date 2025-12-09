@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои доски</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .user-id {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: monospace;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .user-id i {
+            color: #4CAF50;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .actions-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .actions-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-info {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #7B1FA2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .stats i {
+            color: #4CAF50;
+        }
+
+        .boards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            width: 100%;
+        }
+
+        .board-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .board-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(76, 175, 80, 0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .board-id {
+            font-family: monospace;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .board-users {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(76, 175, 80, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .board-title-container {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .board-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        .board-title:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .board-title i {
+            color: #4CAF50;
+            flex-shrink: 0;
+        }
+
+        .board-title-text {
+            flex-grow: 1;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .board-title-edit-btn {
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .board-title:hover .board-title-edit-btn {
+            opacity: 1;
+        }
+
+        .board-title-edit-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .board-title-input {
+            display: none;
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(76, 175, 80, 0.5);
+            background: rgba(255,255,255,0.9);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            font-family: inherit;
+            margin-bottom: 5px;
+        }
+
+        .board-title-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: white;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .board-title-actions {
+            display: none;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .btn-tiny {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-tiny-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-tiny-save:hover {
+            background: #45a049;
+        }
+
+        .btn-tiny-cancel {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-tiny-cancel:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .board-description {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .board-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .board-date {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .board-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-open {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-open:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .btn-copy {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-delete {
+            background: rgba(244, 67, 54, 0.3);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: rgba(244, 67, 54, 0.5);
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            border: 2px dashed rgba(255,255,255,0.2);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .empty-state p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .join-section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .join-form {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-weight: 600;
+            color: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-field {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.15);
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            opacity: 0.8;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Анимация появления карточек */
+        .board-card {
+            animation: fadeIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .board-card:nth-child(1) { animation-delay: 0.1s; }
+        .board-card:nth-child(2) { animation-delay: 0.2s; }
+        .board-card:nth-child(3) { animation-delay: 0.3s; }
+        .board-card:nth-child(4) { animation-delay: 0.4s; }
+        .board-card:nth-child(5) { animation-delay: 0.5s; }
+        .board-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @media (max-width: 1200px) {
+            .boards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 90%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .actions-bar {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .actions-left, .actions-right {
+                justify-content: center;
+            }
+            
+            .boards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .join-form {
+                flex-direction: column;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+            
+            .board-title-edit-btn {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .board-card {
+                padding: 20px;
+            }
+            
+            .board-footer {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .board-actions {
+                justify-content: center;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <i class="fas fa-chalkboard"></i>
+                Мои доски
+            </h1>
+            <p class="subtitle">Управляйте созданными вами досками</p>
+        </header>
+        
+        <div class="user-info">
+            <div>
+                <div class="user-id" id="userIdDisplay">
+                    <i class="fas fa-user"></i>
+                    <span>Ваш ID: <strong id="userIdValue">Загрузка...</strong></span>
+                </div>
+                <p style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
+                    Доски сохраняются только в вашем браузере
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-warning" id="clearLocalBtn">
+                    <i class="fas fa-trash"></i> Очистить мои доски
+                </button>
+            </div>
+        </div>
+        
+        <div class="actions-bar">
+            <div class="actions-left">
+                <div class="stats">
+                    <i class="fas fa-chalkboard"></i>
+                    <span>Мои доски:</span>
+                    <strong id="totalBoards">0</strong>
+                </div>
+            </div>
+            
+            <div class="actions-right">
+                <button class="btn btn-primary" onclick="createNewBoard()">
+                    <i class="fas fa-plus-circle"></i> Создать новую доску
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">
+                    <i class="fas fa-home"></i> На главную
+                </button>
+            </div>
+        </div>
+        
+        <div class="boards-grid" id="boardsContainer">
+            <!-- Доски будут загружены через JavaScript -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-chalkboard"></i>
+                <h3>У вас нет созданных досок</h3>
+                <p>Создайте новую доску для совместного рисования, и она появится здесь</p>
+                <button class="btn btn-primary" onclick="createNewBoard()">
+                    <i class="fas fa-plus-circle"></i> Создать первую доску
+                </button>
+            </div>
+        </div>
+        
+        <div class="join-section">
+            <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-user-plus"></i>
+                Присоединиться к существующей доске
+            </h3>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.8);">
+                Если у вас есть ID существующей доски, вы можете присоединиться к ней.
+                Доска откроется в новом окне и будет добавлена в ваш список.
+            </p>
+            
+            <div class="join-form">
+                <div class="input-group">
+                    <label class="input-label" for="joinBoardId">
+                        <i class="fas fa-hashtag"></i>
+                        ID доски
+                    </label>
+                    <input 
+                        type="text" 
+                        id="joinBoardId" 
+                        class="input-field" 
+                        placeholder="Введите ID доски"
+                        maxlength="50"
+                    >
+                </div>
+                
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="btn btn-info" id="joinBoardBtn" style="height: 46px;">
+                        <i class="fas fa-external-link-alt"></i> Присоединиться
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+                <p><i class="fas fa-info-circle"></i> ID доски можно найти в верхней части открытой доски</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Рисуйте, добавляйте формулы и текст вместе с друзьями! Все изменения видны в реальном времени.</p>
+            <p style="margin-top: 10px; font-size: 0.85rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Внимание: доски хранятся локально в вашем браузере. При очистке данных браузера они будут удалены.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Генерация и управление ID пользователя
+        function getUserId() {
+            let userId = localStorage.getItem('user_id');
+            if (!userId) {
+                // Генерируем уникальный ID пользователя
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('user_id', userId);
+            }
+            return userId;
+        }
+
+        // Получение списка досок пользователя
+        function getUserBoards() {
+            const userId = getUserId();
+            const userBoardsKey = `user_boards_${userId}`;
+            const boardsData = localStorage.getItem(userBoardsKey);
+            return boardsData ? JSON.parse(boardsData) : [];
+        }
+
+        // Сохранение списка досок пользователя
+        function saveUserBoards(boards) {
+            const userId = getUserId();
+            const userBoardsKey = `user_boards_${userId}`;
+            localStorage.setItem(userBoardsKey, JSON.stringify(boards));
+        }
+
+        // Обновление названия доски
+        function updateBoardName(boardId, newName) {
+            const boards = getUserBoards();
+            const boardIndex = boards.findIndex(board => board.id === boardId);
+            if (boardIndex !== -1) {
+                boards[boardIndex].name = newName;
+                saveUserBoards(boards);
+                return true;
+            }
+            return false;
+        }
+
+        // Добавление новой доски
+        function addUserBoard(boardId, boardName = null) {
+            const boards = getUserBoards();
+            
+            // Проверяем, нет ли уже такой доски
+            if (!boards.some(board => board.id === boardId)) {
+                boards.push({
+                    id: boardId,
+                    name: boardName || `Доска ${boards.length + 1}`,
+                    created: new Date().toISOString(),
+                    users: 1,
+                    lastAccessed: new Date().toISOString()
+                });
+                
+                saveUserBoards(boards);
+                loadUserBoards();
+                return true;
+            }
+            return false;
+        }
+
+        // Удаление доски
+        function removeUserBoard(boardId) {
+            const boards = getUserBoards();
+            const filteredBoards = boards.filter(board => board.id !== boardId);
+            saveUserBoards(filteredBoards);
+            loadUserBoards();
+        }
+
+        // Загрузка и отображение досок пользователя
+        function loadUserBoards() {
+            const boards = getUserBoards();
+            const boardsContainer = document.getElementById('boardsContainer');
+            const emptyState = document.getElementById('emptyState');
+            const totalBoards = document.getElementById('totalBoards');
+            
+            totalBoards.textContent = boards.length;
+            
+            // Очищаем контейнер
+            boardsContainer.innerHTML = '';
+            
+            if (boards.length === 0) {
+                emptyState.style.display = 'block';
+                boardsContainer.appendChild(emptyState);
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Сортируем по дате последнего доступа (сначала новые)
+            boards.sort((a, b) => new Date(b.lastAccessed) - new Date(a.created));
+            
+            boards.forEach((board, index) => {
+                const boardCard = document.createElement('div');
+                boardCard.className = 'board-card';
+                boardCard.style.animationDelay = `${(index * 0.1) + 0.1}s`;
+                boardCard.dataset.boardId = board.id;
+                
+                // Форматируем дату создания
+                const createdDate = new Date(board.created);
+                const formattedDate = createdDate.toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Форматируем дату последнего доступа
+                const lastAccessedDate = new Date(board.lastAccessed);
+                const formattedLastAccess = lastAccessedDate.toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Создаем описание на основе данных
+                const daysSinceCreation = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+                let description = `Создана ${daysSinceCreation === 0 ? 'сегодня' : daysSinceCreation === 1 ? 'вчера' : `${daysSinceCreation} дней назад`}`;
+                
+                if (board.users && board.users > 1) {
+                    description += ` · ${board.users} участников`;
+                }
+                
+                boardCard.innerHTML = `
+                    <div class="board-header">
+                        <div class="board-id">ID: ${board.id}</div>
+                        <div class="board-users">
+                            <i class="fas fa-user"></i>
+                            ${board.users || 1}
+                        </div>
+                    </div>
+                    
+                    <div class="board-title-container">
+                        <div class="board-title">
+                            <i class="fas fa-paint-brush"></i>
+                            <span class="board-title-text">${board.name}</span>
+                            <button class="board-title-edit-btn" title="Редактировать название">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <input type="text" class="board-title-input" value="${board.name}" maxlength="50">
+                        <div class="board-title-actions">
+                            <button class="btn-tiny btn-tiny-save" title="Сохранить">
+                                <i class="fas fa-check"></i> Сохранить
+                            </button>
+                            <button class="btn-tiny btn-tiny-cancel" title="Отмена">
+                                <i class="fas fa-times"></i> Отмена
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="board-description">
+                        ${description}
+                    </div>
+                    
+                    <div class="board-footer">
+                        <div class="board-date">
+                            <i class="far fa-calendar-alt"></i>
+                            Создана: ${formattedDate}
+                        </div>
+                        
+                        <div class="board-actions">
+                            <button class="btn-small btn-delete" title="Удалить доску">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-small btn-copy" title="Копировать ссылку">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="btn-small btn-open" title="Открыть доску">
+                                <i class="fas fa-external-link-alt"></i> Открыть
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                boardsContainer.appendChild(boardCard);
+                setupBoardCardEvents(boardCard, board.id);
+            });
+        }
+
+        // Настройка событий для карточки доски
+        function setupBoardCardEvents(boardCard, boardId) {
+            const boardTitle = boardCard.querySelector('.board-title');
+            const boardTitleText = boardCard.querySelector('.board-title-text');
+            const boardTitleEditBtn = boardCard.querySelector('.board-title-edit-btn');
+            const boardTitleInput = boardCard.querySelector('.board-title-input');
+            const boardTitleActions = boardCard.querySelector('.board-title-actions');
+            const saveBtn = boardCard.querySelector('.btn-tiny-save');
+            const cancelBtn = boardCard.querySelector('.btn-tiny-cancel');
+            const deleteBtn = boardCard.querySelector('.btn-delete');
+            const copyBtn = boardCard.querySelector('.btn-copy');
+            const openBtn = boardCard.querySelector('.btn-open');
+            
+            let originalName = boardTitleText.textContent;
+            
+            // Включение режима редактирования
+            function enableEditMode() {
+                boardTitle.style.display = 'none';
+                boardTitleInput.style.display = 'block';
+                boardTitleActions.style.display = 'flex';
+                boardTitleInput.value = originalName;
+                boardTitleInput.focus();
+                boardTitleInput.select();
+            }
+            
+            // Отключение режима редактирования
+            function disableEditMode() {
+                boardTitle.style.display = 'flex';
+                boardTitleInput.style.display = 'none';
+                boardTitleActions.style.display = 'none';
+            }
+            
+            // Сохранение изменений
+            function saveName() {
+                const newName = boardTitleInput.value.trim();
+                if (newName && newName !== originalName) {
+                    if (updateBoardName(boardId, newName)) {
+                        boardTitleText.textContent = newName;
+                        originalName = newName;
+                        showNotification('Название доски обновлено', 'success');
+                    } else {
+                        showNotification('Ошибка при обновлении названия', 'error');
+                    }
+                }
+                disableEditMode();
+            }
+            
+            // Отмена изменений
+            function cancelEdit() {
+                boardTitleInput.value = originalName;
+                disableEditMode();
+            }
+            
+            // Обработчики событий для редактирования названия
+            boardTitle.addEventListener('click', (e) => {
+                if (!e.target.closest('.board-title-edit-btn')) {
+                    // Открываем доску при клике на название (кроме кнопки редактирования)
+                    openBoard(boardId);
+                }
+            });
+            
+            boardTitleEditBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                enableEditMode();
+            });
+            
+            // Двойной клик по названию для редактирования
+            boardTitleText.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                enableEditMode();
+            });
+            
+            // Сохранение по Enter, отмена по Escape
+            boardTitleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    saveName();
+                } else if (e.key === 'Escape') {
+                    cancelEdit();
+                }
+            });
+            
+            // Сохранение при потере фокуса (если не нажали отмену)
+            boardTitleInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    // Проверяем, не нажали ли мы на кнопки отмены или сохранения
+                    if (boardTitleActions.style.display === 'flex') {
+                        const focusedElement = document.activeElement;
+                        if (focusedElement !== saveBtn && focusedElement !== cancelBtn) {
+                            saveName();
+                        }
+                    }
+                }, 10);
+            });
+            
+            // Обработчики для кнопок
+            saveBtn.addEventListener('click', saveName);
+            cancelBtn.addEventListener('click', cancelEdit);
+            
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteBoard(boardId);
+            });
+            
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyBoardLink(boardId);
+            });
+            
+            openBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openBoard(boardId);
+            });
+        }
+
+        // Создание новой доски
+        function createNewBoard() {
+            // Генерируем уникальный ID для доски
+            const boardId = 'board_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Добавляем доску в список пользователя
+            addUserBoard(boardId);
+            
+            // Открываем доску в новом окне
+            openBoard(boardId);
+            
+            showNotification('Новая доска создана!', 'success');
+        }
+
+        // Открытие доски
+        function openBoard(boardId, event = null) {
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            // Обновляем дату последнего доступа
+            const boards = getUserBoards();
+            const boardIndex = boards.findIndex(board => board.id === boardId);
+            if (boardIndex !== -1) {
+                boards[boardIndex].lastAccessed = new Date().toISOString();
+                saveUserBoards(boards);
+            }
+            
+            // Открываем доску в новом окне
+            window.open(`/?id=${boardId}`, '_blank');
+        }
+
+        // Копирование ссылки на доску
+        function copyBoardLink(boardId, event = null) {
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            const url = `${window.location.origin}/?id=${boardId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('Ссылка на доску скопирована!', 'success');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+                showNotification('Не удалось скопировать ссылку', 'error');
+            });
+        }
+
+        // Удаление доски
+        function deleteBoard(boardId, event = null) {
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            if (confirm('Вы уверены, что хотите удалить эту доску? Это действие нельзя отменить.')) {
+                removeUserBoard(boardId);
+                showNotification('Доска удалена', 'info');
+            }
+        }
+
+        // Присоединение к существующей доске по ID
+        function joinBoard() {
+            const boardIdInput = document.getElementById('joinBoardId');
+            const boardId = boardIdInput.value.trim();
+            
+            if (!boardId) {
+                showNotification('Введите ID доски', 'error');
+                boardIdInput.focus();
+                return;
+            }
+            
+            // Проверяем формат ID (можно добавить более строгую проверку)
+            if (boardId.length < 5) {
+                showNotification('ID доски слишком короткий', 'error');
+                return;
+            }
+            
+            // Добавляем доску в список пользователя (если её еще нет)
+            addUserBoard(boardId, `Доска: ${boardId.substring(0, 10)}...`);
+            
+            // Открываем доску
+            openBoard(boardId);
+            
+            // Очищаем поле ввода
+            boardIdInput.value = '';
+            
+            showNotification('Присоединяемся к доске...', 'success');
+        }
+
+        // Очистка всех досок пользователя
+        function clearAllBoards() {
+            if (confirm('Вы уверены, что хотите удалить ВСЕ ваши доски? Это действие нельзя отменить.')) {
+                const userId = getUserId();
+                const userBoardsKey = `user_boards_${userId}`;
+                localStorage.removeItem(userBoardsKey);
+                
+                // Также удаляем ID пользователя для полного сброса
+                localStorage.removeItem('user_id');
+                
+                showNotification('Все ваши доски удалены', 'info');
+                
+                // Перезагружаем страницу
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
+        }
+
+        // Показать уведомление
+        function showNotification(message, type = 'info') {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div>${message}</div>
+                <button onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 15px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.querySelector('button').style.cssText = `
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0;
+                margin: 0;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Отображаем ID пользователя
+            const userId = getUserId();
+            document.getElementById('userIdValue').textContent = userId.substring(0, 20) + '...';
+            
+            // Загружаем доски пользователя
+            loadUserBoards();
+            
+            // Назначаем обработчики событий
+            document.getElementById('clearLocalBtn').addEventListener('click', clearAllBoards);
+            document.getElementById('joinBoardBtn').addEventListener('click', joinBoard);
+            
+            // Разрешаем присоединение по нажатию Enter в поле ввода
+            document.getElementById('joinBoardId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    joinBoard();
+                }
+            });
+            
+            // Проверяем, есть ли переданный ID доски в URL для автоматического присоединения
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinId = urlParams.get('join');
+            if (joinId) {
+                document.getElementById('joinBoardId').value = joinId;
+                joinBoard();
+            }
+            
+            // Добавляем возможность импорта существующей доски
+            const importFromUrl = urlParams.get('import');
+            if (importFromUrl) {
+                try {
+                    const importedData = JSON.parse(atob(importFromUrl));
+                    if (importedData.id) {
+                        addUserBoard(importedData.id, importedData.name || 'Импортированная доска');
+                        showNotification('Доска импортирована!', 'success');
+                    }
+                } catch (e) {
+                    console.error('Ошибка импорта:', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
