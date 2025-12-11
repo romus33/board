@@ -1,4 +1,4 @@
-# board
+# Beres.to
 Online board with LaTEX, Graphs and shapes.
 
 Requirements:
