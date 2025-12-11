@@ -1,2 +1,2 @@
 # board
-Online board with LaTEX
+Online board with LaTEX, Graphs and shapes.
